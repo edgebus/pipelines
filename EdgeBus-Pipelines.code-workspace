@@ -1,0 +1,47 @@
+{
+    "folders": [
+        {
+            "name": "workspace",
+            "path": "."
+        },
+        {
+            "name": "bitbucket",
+            "path": "bitbucket.worktree"
+        },
+        {
+            "name": "drone",
+            "path": "drone.worktree"
+        },
+        {
+            "name": "github",
+            "path": "github.worktree"
+        },
+        {
+            "name": "gitlab",
+            "path": "gitlab.worktree"
+        },
+        {
+            "name": "woodpecker",
+            "path": "woodpecker.worktree"
+        },
+    ],
+    "settings": {
+        "cSpell.language": "en,en-GB,en-US,uk",
+        "files.autoSave": "afterDelay",
+        "files.autoSaveDelay": 3000,
+        "editor.formatOnSave": true,
+        "editor.formatOnSaveMode": "file",
+        "[markdown]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "markdownlint.config": {
+            "default": true,
+            "MD031": false
+        },
+        "cSpell.words": [],
+        "coverage-gutters.showLineCoverage": true,
+        "files.associations": {
+            "*.star": "python"
+        },
+    }
+}
