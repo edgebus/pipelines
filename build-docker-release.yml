@@ -30,13 +30,12 @@ release:tag:build:amd64:
     - docker build ${DOCKER_ARGS} --file "${DOCKER_FILE_PATH}"
       --platform=linux/amd64
       --tag "image-${CI_PROJECT_NAMESPACE}-${CI_PROJECT_NAME}-${CI_JOB_ID}"
-      --build-arg BUILD_CONFIGURATION=release
-      --build-arg CI_COMMIT_REF_NAME
-      --build-arg CI_COMMIT_TAG
-      --build-arg CI_COMMIT_SHORT_SHA
-      --build-arg CI_JOB_URL
-      --build-arg CI_PROJECT_URL
-      --build-arg CI_COMMIT_TIMESTAMP
+      --build-arg BUILD__CONFIGURATION=release
+      --build-arg BUILD__COMMIT__REF=${CI_COMMIT_REF_NAME}
+      --build-arg BUILD__VERSION=${CI_COMMIT_TAG}
+      --build-arg BUILD__PIPELINE__REF=${CI_JOB_URL}
+      --build-arg BUILD__PROJECT__REF=${CI_PROJECT_URL}
+      --build-arg BUILD__COMMIT__TIMESTAMP=${CI_COMMIT_TIMESTAMP}
       ${DOCKER_BUILD_ADDITIONAL_OPTS}
       ${DOCKER_BUILD_CONTEXT_PATH}
     # Make image tags
@@ -91,7 +90,7 @@ release:tag:build:arm64v8:
     - docker build ${DOCKER_ARGS} --file "${DOCKER_FILE_PATH}"
       --platform=linux/arm64/v8
       --tag "image-${CI_PROJECT_NAMESPACE}-${CI_PROJECT_NAME}-${CI_JOB_ID}"
-      --build-arg BUILD_CONFIGURATION=release
+      --build-arg BUILD__CONFIGURATION=release
       --build-arg CI_COMMIT_REF_NAME
       --build-arg CI_COMMIT_TAG
       --build-arg CI_COMMIT_SHORT_SHA
