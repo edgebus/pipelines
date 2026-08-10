@@ -44,11 +44,11 @@ code EdgeBus-Pipelines.code-workspace
 NEW_PLATFORM=...
 #NEW_PLATFORM=bitbucket
 #NEW_PLATFORM=woodpecker
-git worktree add --orphan -b "${NEW_PLATFORM}#master" "${NEW_PLATFORM}.worktree"
+git worktree add --orphan -b "${NEW_PLATFORM}#main" "${NEW_PLATFORM}.worktree"
 (
     cd "${NEW_PLATFORM}.worktree" &&
     git commit --allow-empty -m "Initial Commit" &&
-    git push origin "${NEW_PLATFORM}#master"
+    git push origin "${NEW_PLATFORM}#main"
 )
 
 jq \

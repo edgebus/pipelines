@@ -38,7 +38,9 @@
             "default": true,
             "MD031": false
         },
-        "cSpell.words": [],
+        "cSpell.words": [
+            "edgebus"
+        ],
         "coverage-gutters.showLineCoverage": true,
         "files.associations": {
             "*.star": "python"
