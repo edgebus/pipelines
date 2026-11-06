@@ -2,10 +2,11 @@ def step_factory__welcome(*, use_container):
   step = {
     "name": "welcome",
     "commands": [
-      "echo \"Run on agent '$$(hostname -s)'\"",
+      "echo \"Run on the runner '$${DRONE_RUNNER_NAME}'\"",
+      "echo \"Run on the host '$$(hostname -s)'\"",
       "touch .envvars",
-      "env",
-      "mount",
+      # "env",
+      # "mount",
     ]
   }
   if use_container:
@@ -376,7 +377,7 @@ if "workspace" in doc:
     if "dependencies" in doc["workspace"]:
         for dep in doc["workspace"]["dependencies"].values():
             if isinstance(dep, dict) and "version" in dep:
-                dep["version"] = VERSION
+                dep["version"] = f"={VERSION}"
 
 with open("Cargo.toml", "w", encoding="utf-8") as f:
     f.write(tomlkit.dumps(doc))
@@ -430,10 +431,10 @@ with open("Cargo.toml", "w", encoding="utf-8") as f:
 
   if is_none(workspace_package):
     test_cmd = "cargo test"
-    publish_cmd = 'cargo publish --allow-dirty'
+    publish_cmd = 'cargo publish --allow-dirty --locked'
   else:
     test_cmd = 'cargo test --package "%s"' % workspace_package
-    publish_cmd = 'cargo publish --package "%s" --allow-dirty' % workspace_package
+    publish_cmd = 'cargo publish --package "%s" --allow-dirty --locked' % workspace_package
   # if not is_none(registry_name):
   #   publish_cmd = '%s --registry "%s"' % (publish_cmd, registry_name)
 
@@ -454,6 +455,7 @@ with open("Cargo.toml", "w", encoding="utf-8") as f:
     "commands": [
       "set -euo pipefail",
       "source ./.envvars",
+      "cat Cargo.toml",
       publish_cmd,
     ]
   }
@@ -501,12 +503,16 @@ def stage_factory__build__docker_host__image(stage_cfg, repo_ctx, build_ctx):
       trigger_ref.append("refs/heads/" + build_ctx.branch)
 
   steps = []
-  # steps.append({
-  #   "name": "debug",
-  #   "commands": [ 
-  #     "echo \"trigger_ref: '" + ", ".join(trigger_ref) + "'\""
-  #   ]
-  # })
+  build_secrets_args = ""
+  build_secrets_environment = {}
+
+  if "docker_build_secrets" in stage_cfg:
+    for docker_build_secret in stage_cfg["docker_build_secrets"]:
+      build_secrets_args = build_secrets_args + " " + ("--secret id=%s,env=%s" % (docker_build_secret["name"], docker_build_secret["from_secret"]))
+      build_secrets_environment[docker_build_secret["from_secret"]] = {
+        "from_secret": docker_build_secret["from_secret"]
+      }
+
   steps.append(step_factory__welcome(use_container=False))
   steps.append(step_factory__setup_docker_registry(stage_cfg, repo_ctx, build_ctx))
   steps.append(step_factory__map_ci_variables(stage_configuration, use_container=False))
@@ -542,6 +548,7 @@ def stage_factory__build__docker_host__image(stage_cfg, repo_ctx, build_ctx):
   })
   steps.append({
         "name": "image-build",
+        "environment": build_secrets_environment,
         "commands": [
           "set -euo pipefail",
           "source ./.envvars",
@@ -556,6 +563,7 @@ def stage_factory__build__docker_host__image(stage_cfg, repo_ctx, build_ctx):
               --build-arg BUILD__VERSION="$${THIS__VERSION}" \\\\
               --build-arg BUILD__VERSION_APPENDER="$${THIS__VERSION_APPENDER}" \\\\
               --build-arg BUILD__VERSION_RC_NUMBER="$${THIS__VERSION_RC_NUMBER}" \\\\
+              """ + build_secrets_args + """ \\\\
               --tag "$${THIS__DOCKER_IMAGE_NAME}" \\\\
               --file '""" + dockerfile + """' \\\\
               .
@@ -612,7 +620,7 @@ def stage_factory__build__docker_host__image(stage_cfg, repo_ctx, build_ctx):
     "node": {
       "role": "builder",
       "builder.type": "docker-host",
-      "builder.docker-host.arch": "linux/amd64"
+      # "builder.docker-host.arch": "linux/amd64"
     },
     "platform": {
       "os": "linux",
@@ -627,25 +635,18 @@ def stage_factory__build__docker_host__image(stage_cfg, repo_ctx, build_ctx):
     "steps": steps
   }
 
-  # pipeline_stage.update(
-  #   {
-  #     # "depends_on": [
-  #     #   "sources-cleanliness",
-  #     #   "database-integrity",
-  #     # ],
-  #     # "steps": [
-  #     #   step_factory__resolve_notification_slack_channel(),
-  #   }
-  # )
+  if "depends_on" in stage_cfg:
+    pipeline_stage["depends_on"] = stage_cfg["depends_on"]
+
   return pipeline_stage
 
-def stage_factory__deploy__github_pages__image(stage, repo_ctx, build_ctx):
+def stage_factory__deploy__github_pages__image(stage_cfg, repo_ctx, build_ctx):
   steps = []
   steps.append(step_factory__welcome(use_container=True))
 
   pipeline_stage = {
     "kind": "pipeline",
-    "name": stage["name"] if "name" in stage else stage["kind"],
+    "name": stage_cfg["name"] if "name" in stage_cfg else stage_cfg["kind"],
     "type": "docker",
     "node": {
       "role": "builder",
@@ -654,8 +655,8 @@ def stage_factory__deploy__github_pages__image(stage, repo_ctx, build_ctx):
     "steps": steps,
   }
 
-  if "depends_on" in stage:
-    pipeline_stage["depends_on"] = stage["depends_on"]
+  if "depends_on" in stage_cfg:
+    pipeline_stage["depends_on"] = stage_cfg["depends_on"]
 
   return pipeline_stage
 

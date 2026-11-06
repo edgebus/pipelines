@@ -21,6 +21,7 @@ See [CLI Reference](https://docs.drone.io/cli/install/)
 1. [ ] Add `edgebus-ops.star` template inside your Drone organization
    ```shell
    DRONE_ORG=cvyntar
+   DRONE_ORG=freemework
    drone template rm  --namespace "${DRONE_ORG}" --name edgebus-ops.star > /dev/null
    drone template add --namespace "${DRONE_ORG}" --name edgebus-ops.star --data @edgebus-ops.star
    ```
